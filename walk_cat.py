@@ -10,7 +10,7 @@ import pywikibot
 
 if __name__ == "__main__":
     site = pywikibot.Site(code='en')
-    pages = pywikibot.Category(source=site, title="Category:Articles with dead external links from June 2008").articles()
+    pages = pywikibot.Category(source=site, title="Category:Articles with dead external links from January 2010").articles()
     for p in pages:
         print(p.title())
         if (p.namespace() != 0):
@@ -28,12 +28,29 @@ if __name__ == "__main__":
                 continue
 
             print(link.url)
-            webbrowser.open(link.url)
 
-            if "y" == pywikibot.input_choice('\nFix THIS link?', [('yes', 'y'), ('no', 'n')], 'n', automatic_quit=False):
+            catched = False
+            res = None
+            try:
+                res = requests.get(str(link.url))
+                print(res.status_code)
+            except requests.ConnectionError as e:
+                print(e)
+                catched = True
+            except Exception as e:
+                print(e.get_message())
+                catched = True
+            if not catched and res.status_code == 200:
+                if "y" == pywikibot.input_choice('\nLINK IS OK. Skip?', [('yes', 'y'), ('no', 'n')], 'y', automatic_quit=False):
+                    continue
+
+            fixurl = "http://timetravel.mementoweb.org/memento/2010/" + str(link.url)
+            webbrowser.open(fixurl)
+
+            if "y" == pywikibot.input_choice('\nFix THIS link and remove dead link template?', [('yes', 'y'), ('no', 'n')], 'n', automatic_quit=False):
                 print("accepted")
-                link.url = "http://timetravel.mementoweb.org/memento/2010/" + str(link.url)
-                i.remove()
+                link.url = fixurl
+                for param in i.params: i.remove(param)
                 didEdit = True
             else:
                 print("rejected")

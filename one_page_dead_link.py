@@ -1,8 +1,6 @@
 # /* vim: tabstop=4:expandtab */
 import webbrowser
 import requests
-from pywikibot import pagegenerators, i18n
-from pywikibot.editor import TextEditor
 
 import mwparserfromhell
 import pywikibot
