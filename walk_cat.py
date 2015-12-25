@@ -32,7 +32,7 @@ if __name__ == "__main__":
             catched = False
             res = None
             try:
-                res = requests.get(str(link.url))
+                res = requests.head(str(link.url), timeout=10)
                 print(res.status_code)
             except requests.ConnectionError as e:
                 print(e)
@@ -50,7 +50,7 @@ if __name__ == "__main__":
             if "y" == pywikibot.input_choice('\nFix THIS link and remove dead link template?', [('yes', 'y'), ('no', 'n')], 'n', automatic_quit=False):
                 print("accepted")
                 link.url = fixurl
-                for param in i.params: i.remove(param)
+                parsed.remove(i)
                 didEdit = True
             else:
                 print("rejected")
