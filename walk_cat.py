@@ -1,12 +1,23 @@
 # /* vim: tabstop=4:expandtab */
 import webbrowser
 import requests
+import requests.exceptions
 from pywikibot import pagegenerators
 
 import mwparserfromhell
 from mwparserfromhell.nodes.external_link import ExternalLink
 from mwparserfromhell.nodes.template import Template
 import pywikibot
+
+urls = {}
+
+def get_choice(url):
+    if not url in urls:
+        ans = pywikibot.input_choice('\nFix THIS link and remove dead link template?', [('yes', 'y'), ('no', 'n')], 'n', automatic_quit=False)
+        urls[url] = ans
+    else:
+        ans = urls[url]
+    return ans
 
 if __name__ == "__main__":
     site = pywikibot.Site(code='en')
@@ -34,20 +45,23 @@ if __name__ == "__main__":
             try:
                 res = requests.head(str(link.url), timeout=10)
                 print(res.status_code)
-            except requests.ConnectionError as e:
+            except (requests.exceptions.ReadTimeout, requests.ConnectionError) as e:
                 print(e)
                 catched = True
             except Exception as e:
                 print(e.get_message())
                 catched = True
             if not catched and res.status_code == 200:
-                if "y" == pywikibot.input_choice('\nLINK IS OK. Skip?', [('yes', 'y'), ('no', 'n')], 'y', automatic_quit=False):
+                ans = pywikibot.input_choice('\nLINK IS OK. Remove dead link template?', [('yes', 'y'), ('no', 'n')], 'n', automatic_quit=False)
+                if "y" == ans:
+                    parsed.remove(i)
+                    didEdit = True
                     continue
 
             fixurl = "http://timetravel.mementoweb.org/memento/2010/" + str(link.url)
             webbrowser.open(fixurl)
 
-            if "y" == pywikibot.input_choice('\nFix THIS link and remove dead link template?', [('yes', 'y'), ('no', 'n')], 'n', automatic_quit=False):
+            if "y" == get_choice(str(link.url)):
                 print("accepted")
                 link.url = fixurl
                 parsed.remove(i)
