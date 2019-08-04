@@ -1,3 +1,4 @@
-family = 'wikipedia'
+family = 'haskellwiki'
 mylang = 'en'
-usernames['wikipedia']['en'] = 'ysangkok'
+usernames['haskellwiki']['en'] = 'ysangkok'
+solve_captcha = True
