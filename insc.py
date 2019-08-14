@@ -2,6 +2,7 @@ import webbrowser
 from pywikibot import pagegenerators
 import requests
 import urllib.parse
+import re
 
 import mwparserfromhell
 import pywikibot
@@ -41,8 +42,12 @@ following changes to pywikibot/site.py
 def resolve_url(base_url):
     print("Resolving", base_url)
     r = requests.get(base_url, headers={'User-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36'})
-    print("Resolved", r)
-    return r.url
+    match = re.search("\"(http://archive.fo/[a-z0-9A-Z]{5})\"", r.text)
+    if match:
+        url = match.group(1)
+        print("Resolved", url)
+        return url
+    return None
 
 cache = {}
 
@@ -80,16 +85,21 @@ if __name__ == "__main__":
                 continue
 
             resolved_url = resolve_url(url)
-            webbrowser.open(resolved_url)
-            if "y" == pywikibot.input_choice('\nFix THIS link?', [('yes', 'y'), ('no', 'n')], 'n', automatic_quit=False):
-                print("accepted")
-                i.url = resolved_url
-                didEdit = True
-                cache[url] = resolved_url
-            else:
-                print("rejected")
-                cache[url] = False
+            if not resolved_url: continue
+            #webbrowser.open(resolved_url)
+            resp = resolved_url
+            #resp = input('\nFix THIS link? (or paste URL)\n')
+            #if not resp:
+            #    print("rejected")
+            #    cache[url] = False
+            #    continue
+            #if resp == "y":
+            #    resp = resolved_url
+            #print("accepted")
+            i.url = resp
+            didEdit = True
+            cache[url] = resp
         if didEdit:
             if "y" != pywikibot.input_choice('\nEdit and save page {}?'.format(p.title()), [('yes', 'y'), ('no', 'n')], 'n', automatic_quit=False): continue
             p.text = str(parsed)
-            p.save("fix gmane link using MementoWeb")
+            p.save("fix gmane links using archive.fo")
