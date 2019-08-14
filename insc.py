@@ -39,9 +39,9 @@ following changes to pywikibot/site.py
 """
 
 def resolve_url(base_url):
-    print(base_url)
-    r = requests.get(base_url)
-    print(r)
+    print("Resolving", base_url)
+    r = requests.get(base_url, headers={'User-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36'})
+    print("Resolved", r)
     return r.url
 
 cache = {}
@@ -63,7 +63,7 @@ if __name__ == "__main__":
             if 'gmane' not in i.url:
                 continue
             print(i)
-            url = "http://timetravel.mementoweb.org/memento/2019/" + str(i.url)
+            url = "http://archive.fo/" + str(i.url)
             #archive = requests.get("http://archive.org/wayback/available", params={"url": i.url, "timestamp": "08092010"}).json()
             #print(archive)
             #if not "closest" in archive["archived_snapshots"]:
