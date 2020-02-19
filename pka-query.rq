@@ -1,0 +1,8 @@
+SELECT ?item ?itemLabel 
+WHERE 
+{
+  ?item wdt:P39 wd:Q12311817.
+  MINUS { ?item wdt:P7882 [] } . # ft.dk ID
+  MINUS { ?item wdt:P570 [] } . # date of death
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
+}
