@@ -1,3 +1,5 @@
-family = 'wikidata'
-mylang = 'wikidata'
-usernames['wikidata']['wikidata'] = 'ysangkok'
+family = 'wikipedia'
+mylang = 'en'
+usernames['wikipedia']['en'] = 'ysangkok'
+usernames['wikipedia']['da'] = 'ysangkok'
+usernames['wikipedia']['de'] = 'ysangkok'
