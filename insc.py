@@ -1,11 +1,14 @@
+import datetime
 import webbrowser
-from pywikibot import pagegenerators
 import requests
-import urllib.parse
 import re
 
+from memento_client import MementoClient
 import mwparserfromhell
+from pywikibot import pagegenerators
 import pywikibot
+
+dt = datetime.datetime(2010, 4, 24, 19, 0)
 
 """
 following addition to pywikibot: pywikibot/families/haskellwiki_family.py:
@@ -54,11 +57,11 @@ cache = {}
 
 if __name__ == "__main__":
     site = pywikibot.Site('en')
-    pages = site.exturlusage("www.businessweek.com/1997")
+    pages = site.exturlusage("time.com/time/")
     #if namespaces:
     #    pages = pagegenerators.NamespaceFilterPageGenerator(pages, namespaces)
     pages = pagegenerators.PreloadingGenerator(pages)
-    skip_until = "Massachusetts Miracle"
+    skip_until = "Pan Am Flight 103"
     skip = True
     for p in pages:
         print(p.title())
@@ -73,43 +76,28 @@ if __name__ == "__main__":
         parsed = mwparserfromhell.parse(p.text)
         didEdit = False
         for i in parsed.ifilter_external_links():
-            if 'businessweek' not in i.url or "archive.org" in i.url:
+            if 'time.com' not in i.url or "archive.org" in i.url:
                 continue
             print(i)
-            url = "http://archive.fo/" + str(i.url)
-            #archive = requests.get("http://archive.org/wayback/available", params={"url": i.url, "timestamp": "08092010"}).json()
-            #print(archive)
-            #if not "closest" in archive["archived_snapshots"]:
-            #    print("missing closest, skipping")
-            #    continue
-            #if not "timestamp" in archive["archived_snapshots"]["closest"]:
-            #    print("missing timestamp, skipping")
-            #    continue
-            #timestamp = archive["archived_snapshots"]["closest"]["timestamp"]
-            if url in cache:
-                if cache[url]:
-                    i.url = cache[url]
-                    didEdit = True
-                continue
-
-            resolved_url = resolve_url(url)
-            if not resolved_url:
-                print("COULD NOT resolve, skipping")
-                continue
-            resp = resolved_url
-            #resp = input('\nFix THIS link? (or paste URL)\n')
-            #if not resp:
-            #    print("rejected")
-            #    cache[url] = False
-            #    continue
-            #if resp == "y":
-            #    resp = resolved_url
-            #print("accepted")
-            i.url = resp
-            didEdit = True
-            cache[url] = resp
-        if didEdit:
+            mc = MementoClient()
+            url = str(i.url)
+            if url not in cache:
+                try:
+                    nurl = mc.get_memento_info(url, dt)["mementos"]["closest"]["uri"][0]
+                except KeyError:
+                    continue
+                print(f"old link {url}")
+                print(f"new link {nurl}")
+                cache[url] = i.url
+            else:
+                nurl = cache[url]
             webbrowser.open(p.full_url())
+            if (inp := input("fix?").strip()) != "y":
+                print(f"skipping because user input {inp}")
+                continue
+            i.url = nurl
+            didEdit = True
+        if didEdit:
             if "y" != pywikibot.input_choice('\nEdit and save page {}?'.format(p.title()), [('yes', 'y'), ('no', 'n')], 'n', automatic_quit=False): continue
             p.text = str(parsed)
-            p.save("fix businessweek links using archive.fo")
+            p.save("fix Time Magazine links using MementoWeb")
