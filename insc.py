@@ -41,31 +41,39 @@ following changes to pywikibot/site.py
 
 def resolve_url(base_url):
     print("Resolving", base_url)
-    r = requests.get(base_url, headers={'User-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36'})
+    r = requests.get(base_url, headers={'User-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.150 Safari/537.36'})
     match = re.search("\"(http://archive.fo/[a-z0-9A-Z]{5})\"", r.text)
     if match:
         url = match.group(1)
         print("Resolved", url)
         return url
+    print("not found in text")
     return None
 
 cache = {}
 
 if __name__ == "__main__":
-    site = pywikibot.Site(url='https://wiki.haskell.org/')
-    pages = site.exturlusage("article.gmane.org")
+    site = pywikibot.Site('en')
+    pages = site.exturlusage("www.businessweek.com/1997")
     #if namespaces:
     #    pages = pagegenerators.NamespaceFilterPageGenerator(pages, namespaces)
     pages = pagegenerators.PreloadingGenerator(pages)
+    skip_until = "Massachusetts Miracle"
+    skip = True
     for p in pages:
         print(p.title())
+        if skip:
+            if p.title() != skip_until:
+                continue
+            else:
+                skip = False
         if (p.namespace() != 0):
-             print("skipping")
+             print(f"skipping namespace {p.namespace()}")
              continue
         parsed = mwparserfromhell.parse(p.text)
         didEdit = False
         for i in parsed.ifilter_external_links():
-            if 'gmane' not in i.url:
+            if 'businessweek' not in i.url or "archive.org" in i.url:
                 continue
             print(i)
             url = "http://archive.fo/" + str(i.url)
@@ -85,8 +93,9 @@ if __name__ == "__main__":
                 continue
 
             resolved_url = resolve_url(url)
-            if not resolved_url: continue
-            #webbrowser.open(resolved_url)
+            if not resolved_url:
+                print("COULD NOT resolve, skipping")
+                continue
             resp = resolved_url
             #resp = input('\nFix THIS link? (or paste URL)\n')
             #if not resp:
@@ -100,6 +109,7 @@ if __name__ == "__main__":
             didEdit = True
             cache[url] = resp
         if didEdit:
+            webbrowser.open(p.full_url())
             if "y" != pywikibot.input_choice('\nEdit and save page {}?'.format(p.title()), [('yes', 'y'), ('no', 'n')], 'n', automatic_quit=False): continue
             p.text = str(parsed)
-            p.save("fix gmane links using archive.fo")
+            p.save("fix businessweek links using archive.fo")
