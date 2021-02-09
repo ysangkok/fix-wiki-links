@@ -57,12 +57,12 @@ cache = {}
 
 if __name__ == "__main__":
     site = pywikibot.Site('en')
-    pages = site.exturlusage("time.com/time/")
+    pages = site.exturlusage("www.newstatesman.com/1999")
     #if namespaces:
     #    pages = pagegenerators.NamespaceFilterPageGenerator(pages, namespaces)
     pages = pagegenerators.PreloadingGenerator(pages)
     skip_until = "Pan Am Flight 103"
-    skip = True
+    skip = False
     for p in pages:
         print(p.title())
         if skip:
@@ -76,7 +76,7 @@ if __name__ == "__main__":
         parsed = mwparserfromhell.parse(p.text)
         didEdit = False
         for i in parsed.ifilter_external_links():
-            if 'time.com' not in i.url or "archive.org" in i.url:
+            if 'newstatesman.com' not in i.url or "archive.org" in i.url:
                 continue
             print(i)
             mc = MementoClient()
@@ -100,4 +100,4 @@ if __name__ == "__main__":
         if didEdit:
             if "y" != pywikibot.input_choice('\nEdit and save page {}?'.format(p.title()), [('yes', 'y'), ('no', 'n')], 'n', automatic_quit=False): continue
             p.text = str(parsed)
-            p.save("fix Time Magazine links using MementoWeb")
+            p.save("fix Newstatesman links using MementoWeb")
