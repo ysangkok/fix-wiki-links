@@ -1,13 +1,14 @@
-# /* vim: tabstop=4:expandtab */
+# vim: tabstop=4:expandtab
 import webbrowser
 import requests
+from requests.exceptions import ReadTimeout
 
 import mwparserfromhell
 import pywikibot
 
 if __name__ == "__main__":
     site = pywikibot.Site(code='en')
-    pages = [pywikibot.Page(source=site, title="Vogtle Electric Generating Plant")]
+    pages = [pywikibot.Page(source=site, title="Thou_shalt_not_covet")]
     for p in pages:
         print(p.title())
         if (p.namespace() != 0):
@@ -16,16 +17,21 @@ if __name__ == "__main__":
         parsed = mwparserfromhell.parse(p.text)
         didEdit = False
         for i in parsed.ifilter_external_links():
+            if "va/archive/catechis" in i.url:
+                continue
             print(i.url)
             catched = False
             res = None
-            try: res = requests.get(i.url)
+            try: res = requests.get(i.url, timeout=2)
+            except ReadTimeout:
+                catched = True
             except Exception as e:
                 print(e.get_message())
                 catched = True
-            print(res.status_code)
-            if res.status_code == 200: continue
-            url = "http://timetravel.mementoweb.org/memento/2010/" + str(i.url)
+            else:
+                print(res.status_code)
+                if res.status_code == 200: continue
+            url = "http://archive.is/timegate/" + str(i.url)
             webbrowser.open(url)
             if "y" == pywikibot.input_choice('\nFix THIS link?', [('yes', 'y'), ('no', 'n')], 'n', automatic_quit=False):
                 print("accepted")
