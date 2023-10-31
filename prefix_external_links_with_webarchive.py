@@ -7,7 +7,7 @@ import pywikibot
 
 if __name__ == "__main__":
     site = pywikibot.Site(code='da')
-    pages = site.exturlusage("www.ft.dk")
+    pages = site.exturlusage("www.dr.dk/P")
     #if namespaces:
     #    pages = pagegenerators.NamespaceFilterPageGenerator(pages, namespaces)
     pages = pagegenerators.PreloadingGenerator(pages)
@@ -19,7 +19,9 @@ if __name__ == "__main__":
         parsed = mwparserfromhell.parse(p.text)
         didEdit = False
         for i in parsed.ifilter_external_links():
-            if not i.url.startswith("http://www.ft.dk/BAGGRUND/Biografier"):
+            if not i.url.startswith("http://www.dr.dk/P"):
+                continue
+            if i.url.startswith("http://www.dr.dk/P4"):
                 continue
             print(i)
             url = "https://web.archive.org/web/20070706040605/" + str(i.url)
@@ -42,4 +44,4 @@ if __name__ == "__main__":
         if didEdit:
             if "y" != pywikibot.input_choice('\nEdit and save page {}?'.format(p.title()), [('yes', 'y'), ('no', 'n')], 'n', automatic_quit=False): continue
             p.text = str(parsed)
-            p.save("Verlinkung auf ft.dk reparieren")
+            p.save("Reparér link til dr.dk")
